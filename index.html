@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marimo Life</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="game-world-wrapper">
+            <div class="game-world">
+                <canvas id="marimoCanvas"></canvas>
+            </div>
+            <div id="marimoInfoPanel" class="info-panel">
+                <!-- Info will be populated by JS -->
+            </div>
+        </div>
+
+        <div class="controls-panel">
+            <h2>Actions</h2>
+            <button id="feedButton" data-action="feed">Feed Nutrients</button>
+            <button id="cleanButton" data-action="clean">Clean Tank</button>
+            <button id="interactButton" data-action="interact">Interact</button>
+            <button id="changeWaterButton" data-action="changeWater">Change Water</button>
+            <div id="debugInfo" style="font-size: 0.8em; margin-top: 10px;"></div>
+             <button id="resetButton" style="margin-top: 20px; background-color: #c0392b;">Reset Game (Deletes Save)</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
