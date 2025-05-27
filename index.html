@@ -3,523 +3,611 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Greedy Goblin Grab</title>
+    <title>Astro-Drifters: Debris Dodge</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Courier New', Courier, monospace;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
-            background-color: #333;
-            color: #fff;
-            overflow: hidden; /* Prevent scrollbars from game area */
+            background-color: #000010;
+            color: #00ff00;
+            overflow: hidden;
         }
-
-        #game-container {
-            position: relative;
-            width: 700px; /* Game area width */
-            height: 500px; /* Game area height */
-            border: 3px solid #555;
-            background-color: #4a3b2a; /* Cave-like color */
-            overflow: hidden; /* Keep elements inside */
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        #gameCanvas {
+            border: 2px solid #008800;
+            background-color: #000020; /* Dark space */
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
         }
-
-        .player {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            border-radius: 5px;
-            transition: transform 0.1s linear; /* For smooth bump effect */
-        }
-
-        #player1 {
-            background-color: #2ecc71; /* Goblin Greenfoot */
-            border: 2px solid #27ae60;
-        }
-
-        #player2 {
-            background-color: #f1c40f; /* Goblin Goldtooth */
-            border: 2px solid #f39c12;
-        }
-
-        .treasure {
-            position: absolute;
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            background-image: radial-gradient(circle, #fff, gold);
-            box-shadow: 0 0 5px gold;
-        }
-        .ruby { background-image: radial-gradient(circle, #ffcccc, #e74c3c); box-shadow: 0 0 5px #e74c3c;}
-        .sapphire { background-image: radial-gradient(circle, #ccffff, #3498db); box-shadow: 0 0 5px #3498db;}
-        .diamond { background-image: radial-gradient(circle, #fff, #ecf0f1); box-shadow: 0 0 8px #fff; width: 20px; height: 20px; }
-
-
-        .hoard {
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            border: 2px dashed #777;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            color: #ccc;
-        }
-
-        #hoard1 {
-            left: 10px;
-            top: 10px;
-            background-color: rgba(46, 204, 113, 0.2);
-        }
-
-        #hoard2 {
-            right: 10px;
-            top: 10px;
-            background-color: rgba(241, 196, 15, 0.2);
-        }
-
         #scoreboard {
-            margin-top: 20px;
-            font-size: 1.5em;
+            margin-top: 15px;
+            font-size: 1.2em;
             display: flex;
             justify-content: space-around;
-            width: 700px;
+            width: 800px; /* Match canvas width */
+            text-shadow: 0 0 5px #00ff00;
         }
-
-        #player1-score { color: #2ecc71; }
-        #player2-score { color: #f1c40f; }
-
-        #timer {
+        .player-info {
+            text-align: center;
+        }
+        #timer-display {
             font-size: 1.5em;
             margin-bottom: 10px;
+            text-shadow: 0 0 5px #00ff00;
         }
-
         #start-button, #reset-button {
             padding: 10px 20px;
             font-size: 1em;
-            background-color: #3498db;
-            color: white;
-            border: none;
+            background-color: #004400;
+            color: #00ff00;
+            border: 1px solid #008800;
             border-radius: 5px;
             cursor: pointer;
             margin: 10px;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
         }
         #start-button:hover, #reset-button:hover {
-            background-color: #2980b9;
+            background-color: #006600;
         }
         #instructions {
             margin-top: 15px;
-            font-size: 0.9em;
-            text-align: center;
-            max-width: 700px;
-            line-height: 1.4;
-        }
-        .inventory-display {
             font-size: 0.8em;
-            margin-top: 5px;
+            text-align: center;
+            max-width: 800px;
+            line-height: 1.4;
+            color: #00cc00;
         }
+        .player1-text { color: #66ccff; text-shadow: 0 0 5px #66ccff; } /* Blueish */
+        .player2-text { color: #ff6666; text-shadow: 0 0 5px #ff6666; } /* Reddish */
     </style>
 </head>
 <body>
-    <h1>Greedy Goblin Grab!</h1>
-    <div id="timer">Time Left: 60s</div>
+    <h1>Astro-Drifters: Debris Dodge</h1>
+    <div id="timer-display">Time: 120</div>
     <div id="scoreboard">
-        <div>P1 (Green): <span id="player1-score">0</span> <span id="player1-inventory" class="inventory-display"></span></div>
-        <div>P2 (Gold): <span id="player2-score">0</span> <span id="player2-inventory" class="inventory-display"></span></div>
+        <div class="player-info player1-text">
+            Player 1 (Blue)<br>
+            Score: <span id="player1-score">0</span><br>
+            Health: <span id="player1-health">3</span><br>
+            Shield: <span id="player1-shield-status">READY</span>
+        </div>
+        <div class="player-info player2-text">
+            Player 2 (Red)<br>
+            Score: <span id="player2-score">0</span><br>
+            Health: <span id="player2-health">3</span><br>
+            Shield: <span id="player2-shield-status">READY</span>
+        </div>
     </div>
-
-    <div id="game-container">
-        <div id="player1" class="player"></div>
-        <div id="player2" class="player"></div>
-        <div id="hoard1" class="hoard">P1 HOARD</div>
-        <div id="hoard2" class="hoard">P2 HOARD</div>
-        <!-- Treasures will be added here by JavaScript -->
-    </div>
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
     <button id="start-button">Start Game</button>
     <button id="reset-button" style="display:none;">Play Again</button>
     <div id="instructions">
-        <strong>Player 1 (Green):</strong> W,A,S,D to Move. SPACE to Grab/Drop. <br>
-        <strong>Player 2 (Gold):</strong> Arrow Keys to Move. ENTER to Grab/Drop. <br>
-        Grab treasure and bring it back to your hoard! Bump into each other to make them drop loot!
-        Max 3 items in inventory.
+        <strong>P1 (Blue):</strong> W=Thrust, A/D=Rotate, S=Brake, SPACE=Shield<br>
+        <strong>P2 (Red):</strong> UP=Thrust, LEFT/RIGHT=Rotate, DOWN=Brake, ENTER=Shield<br>
+        Collect <span style="color:gold;">Gold Salvage</span>! Avoid Asteroids! Last drifter or highest score wins.
     </div>
 
     <script>
-        const gameContainer = document.getElementById('game-container');
-        const player1Elem = document.getElementById('player1');
-        const player2Elem = document.getElementById('player2');
-        const hoard1Elem = document.getElementById('hoard1');
-        const hoard2Elem = document.getElementById('hoard2');
-        const player1ScoreElem = document.getElementById('player1-score');
-        const player2ScoreElem = document.getElementById('player2-score');
-        const player1InventoryElem = document.getElementById('player1-inventory');
-        const player2InventoryElem = document.getElementById('player2-inventory');
-        const timerElem = document.getElementById('timer');
-        const startButton = document.getElementById('start-button');
-        const resetButton = document.getElementById('reset-button');
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-        const GAME_WIDTH = gameContainer.clientWidth;
-        const GAME_HEIGHT = gameContainer.clientHeight;
-        const PLAYER_SIZE = 30;
-        const TREASURE_SIZE = 15;
-        const DIAMOND_SIZE = 20;
-        const HOARD_SIZE = 60;
-        const PLAYER_SPEED = 8; // Reduced speed for better control
-        const MAX_INVENTORY = 3;
-        const GAME_DURATION = 60; // seconds
+        const SCOREBOARD_P1_SCORE = document.getElementById('player1-score');
+        const SCOREBOARD_P1_HEALTH = document.getElementById('player1-health');
+        const SCOREBOARD_P1_SHIELD = document.getElementById('player1-shield-status');
+        const SCOREBOARD_P2_SCORE = document.getElementById('player2-score');
+        const SCOREBOARD_P2_HEALTH = document.getElementById('player2-health');
+        const SCOREBOARD_P2_SHIELD = document.getElementById('player2-shield-status');
+        const TIMER_DISPLAY = document.getElementById('timer-display');
+        const START_BUTTON = document.getElementById('start-button');
+        const RESET_BUTTON = document.getElementById('reset-button');
 
-        let player1 = { x: 50, y: GAME_HEIGHT / 2 - PLAYER_SIZE / 2, score: 0, inventory: [] };
-        let player2 = { x: GAME_WIDTH - 50 - PLAYER_SIZE, y: GAME_HEIGHT / 2 - PLAYER_SIZE / 2, score: 0, inventory: [] };
-        let treasures = [];
-        let timeLeft = GAME_DURATION;
+        const GAME_WIDTH = canvas.width;
+        const GAME_HEIGHT = canvas.height;
+
+        // --- Game Constants ---
+        const SHIP_SIZE = 20; // Diameter for collision, base of triangle
+        const SHIP_THRUST = 0.1;
+        const SHIP_REVERSE_THRUST = 0.05;
+        const SHIP_TURN_SPEED = 0.08; // Radians per frame
+        const SHIP_FRICTION = 0.99; // Multiplier for velocity
+        const SHIP_MAX_SPEED = 4;
+        const SHIP_INITIAL_HEALTH = 3;
+        const SHIP_INVULNERABILITY_DURATION = 2000; // ms after hit
+        const SHIELD_DURATION = 2000; // ms
+        const SHIELD_COOLDOWN = 8000; // ms
+
+        const ASTEROID_NUM_INITIAL = 5;
+        const ASTEROID_NUM_MAX = 15;
+        const ASTEROID_SIZE_MIN = 15;
+        const ASTEROID_SIZE_MAX = 40;
+        const ASTEROID_SPEED_MIN = 0.5;
+        const ASTEROID_SPEED_MAX = 2;
+        const ASTEROID_VERTICES_MIN = 5;
+        const ASTEROID_VERTICES_MAX = 10;
+        const ASTEROID_JAGGEDNESS = 0.4; // 0 = perfect circle, 1 = very jagged
+
+        const SALVAGE_NUM_MAX = 8;
+        const SALVAGE_SIZE = 8;
+        const SALVAGE_VALUE = 10;
+
+        const GAME_DURATION_SECONDS = 120; // 2 minutes
+
+        // --- Game State Variables ---
+        let player1, player2;
+        let asteroids = [];
+        let salvages = [];
+        let keysPressed = {};
         let gameInterval;
+        let timerInterval;
+        let timeLeft = GAME_DURATION_SECONDS;
         let gameRunning = false;
+        let gameOver = false;
 
-        const TREASURE_TYPES = [
-            { type: 'gold', value: 1, class: 'treasure', size: TREASURE_SIZE },
-            { type: 'ruby', value: 5, class: 'treasure ruby', size: TREASURE_SIZE },
-            { type: 'sapphire', value: 10, class: 'treasure sapphire', size: TREASURE_SIZE },
-            { type: 'diamond', value: 25, class: 'treasure diamond', size: DIAMOND_SIZE }
-        ];
+        class GameObject {
+            constructor(x, y, vx, vy, radius) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.radius = radius; // For collision detection
+            }
 
-        function updatePlayerPosition(player, playerElem) {
-            playerElem.style.left = player.x + 'px';
-            playerElem.style.top = player.y + 'px';
+            updatePosition() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.screenWrap();
+            }
+
+            screenWrap() {
+                if (this.x < -this.radius) this.x = GAME_WIDTH + this.radius;
+                if (this.x > GAME_WIDTH + this.radius) this.x = -this.radius;
+                if (this.y < -this.radius) this.y = GAME_HEIGHT + this.radius;
+                if (this.y > GAME_HEIGHT + this.radius) this.y = -this.radius;
+            }
         }
 
-        function createTreasureElement(treasure) {
-            const elem = document.createElement('div');
-            elem.className = treasure.class;
-            elem.style.left = treasure.x + 'px';
-            elem.style.top = treasure.y + 'px';
-            if (treasure.type === 'diamond') {
-                 elem.style.width = DIAMOND_SIZE + 'px';
-                 elem.style.height = DIAMOND_SIZE + 'px';
+        class Ship extends GameObject {
+            constructor(x, y, color, controls) {
+                super(x, y, 0, 0, SHIP_SIZE / 2);
+                this.angle = -Math.PI / 2; // Pointing up
+                this.color = color;
+                this.controls = controls;
+                this.score = 0;
+                this.health = SHIP_INITIAL_HEALTH;
+                this.isThrusting = false;
+                this.isInvulnerable = false;
+                this.invulnerabilityTimer = 0;
+                this.shieldActive = false;
+                this.shieldTimer = 0;
+                this.shieldCooldownTimer = 0;
+                this.isDestroyed = false;
             }
-            treasure.element = elem; // Store reference to DOM element
-            gameContainer.appendChild(elem);
-            return elem;
+
+            draw() {
+                if (this.isDestroyed) return;
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle + Math.PI / 2); // Adjust because 0 angle is right
+
+                // Ship body (triangle)
+                ctx.beginPath();
+                ctx.moveTo(0, -this.radius); // Tip
+                ctx.lineTo(this.radius * 0.7, this.radius * 0.7);
+                ctx.lineTo(-this.radius * 0.7, this.radius * 0.7);
+                ctx.closePath();
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+
+                // Thrust flame
+                if (this.isThrusting && !this.isDestroyed) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, this.radius * 0.8);
+                    ctx.lineTo(this.radius * 0.5, this.radius * 1.5);
+                    ctx.lineTo(-this.radius * 0.5, this.radius * 1.5);
+                    ctx.closePath();
+                    ctx.fillStyle = "orange";
+                    ctx.fill();
+                }
+                
+                // Shield bubble
+                if (this.shieldActive) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius * 1.5, 0, Math.PI * 2);
+                    ctx.strokeStyle = "rgba(100, 200, 255, 0.7)";
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                } else if (this.isInvulnerable) { // Flicker when invulnerable after hit
+                     if (Math.floor(Date.now() / 100) % 2 === 0) {
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.radius * 1.2, 0, Math.PI * 2);
+                        ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                     }
+                }
+
+                ctx.restore();
+            }
+
+            update() {
+                if (this.isDestroyed) return;
+                this.isThrusting = false;
+
+                // Movement
+                if (keysPressed[this.controls.rotateLeft]) this.angle -= SHIP_TURN_SPEED;
+                if (keysPressed[this.controls.rotateRight]) this.angle += SHIP_TURN_SPEED;
+
+                if (keysPressed[this.controls.thrust]) {
+                    this.vx += Math.cos(this.angle) * SHIP_THRUST;
+                    this.vy += Math.sin(this.angle) * SHIP_THRUST;
+                    this.isThrusting = true;
+                }
+                if (keysPressed[this.controls.brake]) {
+                    this.vx -= Math.cos(this.angle) * SHIP_REVERSE_THRUST;
+                    this.vy -= Math.sin(this.angle) * SHIP_REVERSE_THRUST;
+                }
+
+                // Limit speed
+                const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                if (speed > SHIP_MAX_SPEED) {
+                    this.vx = (this.vx / speed) * SHIP_MAX_SPEED;
+                    this.vy = (this.vy / speed) * SHIP_MAX_SPEED;
+                }
+
+                this.vx *= SHIP_FRICTION;
+                this.vy *= SHIP_FRICTION;
+
+                this.updatePosition();
+
+                // Invulnerability timer
+                if (this.isInvulnerable) {
+                    this.invulnerabilityTimer -= 1000 / 60; // Assuming 60 FPS
+                    if (this.invulnerabilityTimer <= 0) {
+                        this.isInvulnerable = false;
+                    }
+                }
+                // Shield timer
+                if (this.shieldActive) {
+                    this.shieldTimer -= 1000/60;
+                    if (this.shieldTimer <= 0) {
+                        this.shieldActive = false;
+                        this.shieldCooldownTimer = SHIELD_COOLDOWN;
+                    }
+                } else if (this.shieldCooldownTimer > 0) {
+                    this.shieldCooldownTimer -= 1000/60;
+                }
+            }
+            
+            activateShield() {
+                if (this.isDestroyed || this.shieldActive || this.shieldCooldownTimer > 0) return;
+                this.shieldActive = true;
+                this.shieldTimer = SHIELD_DURATION;
+            }
+
+            takeHit() {
+                if (this.isInvulnerable || this.shieldActive || this.isDestroyed) return false; // No damage
+
+                this.health--;
+                if (this.health <= 0) {
+                    this.health = 0;
+                    this.isDestroyed = true;
+                    // Could add an explosion effect here
+                    checkGameOver();
+                } else {
+                    this.isInvulnerable = true;
+                    this.invulnerabilityTimer = SHIP_INVULNERABILITY_DURATION;
+                }
+                return true; // Damage taken
+            }
         }
 
-        function spawnTreasure() {
-            if (treasures.length >= 15 || !gameRunning) return; // Max 15 treasures on screen
-
-            const typeIndex = Math.floor(Math.random() * TREASURE_TYPES.length);
-            // Make diamonds rarer
-            let randomType = TREASURE_TYPES[typeIndex];
-            if (Math.random() > 0.85 && randomType.type !== 'diamond') { // Higher chance for diamond
-                randomType = TREASURE_TYPES.find(t => t.type === 'diamond');
-            } else if (Math.random() > 0.6 && (randomType.type === 'diamond' || randomType.type === 'sapphire')) {
-                 randomType = TREASURE_TYPES[Math.floor(Math.random() * 2)]; // gold or ruby
+        class Asteroid extends GameObject {
+            constructor(x, y, vx, vy, radius) {
+                super(x, y, vx, vy, radius);
+                this.angle = 0;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.02;
+                this.vertices = [];
+                const numVertices = Math.floor(Math.random() * (ASTEROID_VERTICES_MAX - ASTEROID_VERTICES_MIN + 1)) + ASTEROID_VERTICES_MIN;
+                for (let i = 0; i < numVertices; i++) {
+                    const angle = (i / numVertices) * Math.PI * 2;
+                    const dist = this.radius * (1 - ASTEROID_JAGGEDNESS / 2 + Math.random() * ASTEROID_JAGGEDNESS);
+                    this.vertices.push({
+                        x: Math.cos(angle) * dist,
+                        y: Math.sin(angle) * dist
+                    });
+                }
             }
 
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                ctx.beginPath();
+                ctx.moveTo(this.vertices[0].x, this.vertices[0].y);
+                for (let i = 1; i < this.vertices.length; i++) {
+                    ctx.lineTo(this.vertices[i].x, this.vertices[i].y);
+                }
+                ctx.closePath();
+                ctx.strokeStyle = "#aaa"; // Greyish
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.fillStyle = "#666";
+                ctx.fill();
+                ctx.restore();
+            }
+            
+            update() {
+                this.angle += this.rotationSpeed;
+                this.updatePosition();
+            }
+        }
 
-            const treasure = {
-                x: Math.random() * (GAME_WIDTH - randomType.size * 2) + randomType.size,
-                y: Math.random() * (GAME_HEIGHT - randomType.size * 2) + randomType.size,
-                ...randomType // spread type, value, class, size
-            };
-
-            // Avoid spawning on hoards
-            if (checkCollision(treasure, {x: hoard1Elem.offsetLeft, y: hoard1Elem.offsetTop, width: HOARD_SIZE, height: HOARD_SIZE}) ||
-                checkCollision(treasure, {x: hoard2Elem.offsetLeft, y: hoard2Elem.offsetTop, width: HOARD_SIZE, height: HOARD_SIZE})) {
-                spawnTreasure(); // Try again
-                return;
+        class Salvage extends GameObject {
+            constructor(x, y, radius, value) {
+                super(x, y, 0, 0, radius); // Salvage is stationary for now
+                this.value = value;
+                this.twinkle = 0;
             }
 
-            createTreasureElement(treasure);
-            treasures.push(treasure);
+            draw() {
+                this.twinkle = (this.twinkle + 0.1) % (Math.PI * 2);
+                const alpha = 0.7 + Math.sin(this.twinkle) * 0.3;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 223, 0, ${alpha})`; // Gold
+                ctx.fill();
+                ctx.strokeStyle = `rgba(255, 255, 100, ${alpha * 0.7})`;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        }
+
+        function initPlayers() {
+            player1 = new Ship(GAME_WIDTH * 0.25, GAME_HEIGHT / 2, "#66ccff", { // Blueish
+                thrust: 'w', rotateLeft: 'a', rotateRight: 'd', brake: 's', special: ' '
+            });
+            player2 = new Ship(GAME_WIDTH * 0.75, GAME_HEIGHT / 2, "#ff6666", { // Reddish
+                thrust: 'arrowup', rotateLeft: 'arrowleft', rotateRight: 'arrowright', brake: 'arrowdown', special: 'enter'
+            });
+        }
+
+        function spawnAsteroid() {
+            if (asteroids.length >= ASTEROID_NUM_MAX) return;
+
+            const radius = Math.random() * (ASTEROID_SIZE_MAX - ASTEROID_SIZE_MIN) + ASTEROID_SIZE_MIN;
+            let x, y;
+            const edge = Math.floor(Math.random() * 4); // 0:top, 1:right, 2:bottom, 3:left
+
+            if (edge === 0) { // Top
+                x = Math.random() * GAME_WIDTH; y = -radius;
+            } else if (edge === 1) { // Right
+                x = GAME_WIDTH + radius; y = Math.random() * GAME_HEIGHT;
+            } else if (edge === 2) { // Bottom
+                x = Math.random() * GAME_WIDTH; y = GAME_HEIGHT + radius;
+            } else { // Left
+                x = -radius; y = Math.random() * GAME_HEIGHT;
+            }
+
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * (ASTEROID_SPEED_MAX - ASTEROID_SPEED_MIN) + ASTEROID_SPEED_MIN;
+            const vx = Math.cos(angle) * speed;
+            const vy = Math.sin(angle) * speed;
+
+            asteroids.push(new Asteroid(x, y, vx, vy, radius));
+        }
+
+        function spawnSalvage() {
+            if (salvages.length >= SALVAGE_NUM_MAX) return;
+            const x = Math.random() * (GAME_WIDTH - SALVAGE_SIZE * 2) + SALVAGE_SIZE;
+            const y = Math.random() * (GAME_HEIGHT - SALVAGE_SIZE * 2) + SALVAGE_SIZE;
+            // Ensure not spawning on players initially (simple check)
+            if (distance(x,y,player1.x,player1.y) < player1.radius + SALVAGE_SIZE + 20 || 
+                distance(x,y,player2.x,player2.y) < player2.radius + SALVAGE_SIZE + 20) {
+                return; // Try again next frame
+            }
+            salvages.push(new Salvage(x, y, SALVAGE_SIZE, SALVAGE_VALUE));
+        }
+
+        function distance(x1, y1, x2, y2) {
+            return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+        }
+
+        function checkCollisions() {
+            // Player vs Asteroids
+            [player1, player2].forEach(player => {
+                if (player.isDestroyed) return;
+                for (let i = asteroids.length - 1; i >= 0; i--) {
+                    const asteroid = asteroids[i];
+                    if (distance(player.x, player.y, asteroid.x, asteroid.y) < player.radius + asteroid.radius) {
+                        if (player.shieldActive) {
+                            // Shield deflects asteroid
+                            asteroids.splice(i, 1); // Destroy asteroid
+                        } else if (player.takeHit()) {
+                             asteroids.splice(i, 1); // Destroy asteroid on normal hit too
+                        }
+                        // Could add sound effects or visual feedback here
+                        break; // Only one collision per frame with an asteroid for player
+                    }
+                }
+            });
+
+            // Player vs Salvage
+            [player1, player2].forEach(player => {
+                if (player.isDestroyed) return;
+                for (let i = salvages.length - 1; i >= 0; i--) {
+                    const salvage = salvages[i];
+                    if (distance(player.x, player.y, salvage.x, salvage.y) < player.radius + salvage.radius) {
+                        player.score += salvage.value;
+                        salvages.splice(i, 1);
+                        // Sound effect for collection
+                    }
+                }
+            });
+        }
+
+        function updateUI() {
+            SCOREBOARD_P1_SCORE.textContent = player1.score;
+            SCOREBOARD_P1_HEALTH.textContent = player1.health;
+            SCOREBOARD_P1_SHIELD.textContent = player1.shieldActive ? "ACTIVE" : (player1.shieldCooldownTimer > 0 ? `CD ${Math.ceil(player1.shieldCooldownTimer/1000)}s` : "READY");
+            
+            SCOREBOARD_P2_SCORE.textContent = player2.score;
+            SCOREBOARD_P2_HEALTH.textContent = player2.health;
+            SCOREBOARD_P2_SHIELD.textContent = player2.shieldActive ? "ACTIVE" : (player2.shieldCooldownTimer > 0 ? `CD ${Math.ceil(player2.shieldCooldownTimer/1000)}s` : "READY");
+
+            TIMER_DISPLAY.textContent = `Time: ${timeLeft}`;
         }
         
-        function spawnSpecificTreasure(x, y, type, value, className, size) {
-            const treasure = {
-                x: Math.max(0, Math.min(x, GAME_WIDTH - size)), // Keep within bounds
-                y: Math.max(0, Math.min(y, GAME_HEIGHT - size)),
-                type: type,
-                value: value,
-                class: className,
-                size: size
-            };
-            createTreasureElement(treasure);
-            treasures.push(treasure);
-        }
-
-
-        function checkCollision(rect1, rect2) {
-            // Check if rect1 has width/height, if not, use its size property
-            const r1Width = rect1.width !== undefined ? rect1.width : rect1.size;
-            const r1Height = rect1.height !== undefined ? rect1.height : rect1.size;
-            const r2Width = rect2.width !== undefined ? rect2.width : rect2.size;
-            const r2Height = rect2.height !== undefined ? rect2.height : rect2.size;
-
-            return rect1.x < rect2.x + r2Width &&
-                   rect1.x + r1Width > rect2.x &&
-                   rect1.y < rect2.y + r2Height &&
-                   rect1.y + r1Height > rect2.y;
-        }
-
-        function updateScores() {
-            player1ScoreElem.textContent = player1.score;
-            player2ScoreElem.textContent = player2.score;
-            player1InventoryElem.textContent = `(${player1.inventory.length}/${MAX_INVENTORY}) ${player1.inventory.map(t=>t.type[0]).join(',')}`;
-            player2InventoryElem.textContent = `(${player2.inventory.length}/${MAX_INVENTORY}) ${player2.inventory.map(t=>t.type[0]).join(',')}`;
-
-        }
-
-        function handlePlayerAction(player, playerElem, hoardElem) {
-            // Check for treasure collection
-            for (let i = treasures.length - 1; i >= 0; i--) {
-                const treasure = treasures[i];
-                if (checkCollision(player, treasure)) {
-                    if (player.inventory.length < MAX_INVENTORY) {
-                        player.inventory.push(treasure);
-                        gameContainer.removeChild(treasure.element);
-                        treasures.splice(i, 1);
-                        // console.log((player === player1 ? "P1" : "P2") + " picked up " + treasure.type);
-                        break; // Pick up one at a time
-                    }
-                }
-            }
-
-            // Check for depositing treasure
-            const hoardRect = {
-                x: hoardElem.offsetLeft,
-                y: hoardElem.offsetTop,
-                width: HOARD_SIZE,
-                height: HOARD_SIZE
-            };
-            if (checkCollision(player, hoardRect)) {
-                if (player.inventory.length > 0) {
-                    player.inventory.forEach(item => player.score += item.value);
-                    // console.log((player === player1 ? "P1" : "P2") + " deposited " + player.inventory.length + " items. New score: " + player.score);
-                    player.inventory = [];
-                }
-            }
-            updateScores();
-        }
-        
-        function handlePlayerCollision() {
-            if (checkCollision({...player1, width: PLAYER_SIZE, height: PLAYER_SIZE}, {...player2, width: PLAYER_SIZE, height: PLAYER_SIZE})) {
-                // Simple bump: one random item from one player drops
-                // A more complex system could check who initiated the bump
-                const p1BumpsP2 = player1.lastMoveTime > player2.lastMoveTime; // A naive way to check who moved last
-                const p2BumpsP1 = player2.lastMoveTime > player1.lastMoveTime;
-
-                let bumpedPlayer = null;
-                let bumper = null;
-
-                // Basic: if they are overlapping, decide who drops
-                if (Math.random() < 0.5 && player1.inventory.length > 0) {
-                    bumpedPlayer = player1;
-                    bumper = player2;
-                } else if (player2.inventory.length > 0) {
-                    bumpedPlayer = player2;
-                    bumper = player1;
-                }
-
-
-                if (bumpedPlayer && bumpedPlayer.inventory.length > 0) {
-                    const droppedItemIndex = Math.floor(Math.random() * bumpedPlayer.inventory.length);
-                    const droppedItem = bumpedPlayer.inventory.splice(droppedItemIndex, 1)[0];
-                    
-                    // Spawn dropped item near the collision
-                    const dropX = (player1.x + player2.x) / 2;
-                    const dropY = (player1.y + player2.y) / 2;
-                    spawnSpecificTreasure(dropX, dropY, droppedItem.type, droppedItem.value, droppedItem.class, droppedItem.size);
-                    
-                    // console.log((bumpedPlayer === player1 ? "P1" : "P2") + " dropped a " + droppedItem.type);
-                    updateScores();
-
-                    // Visual bump effect (optional)
-                    const bumpedElem = (bumpedPlayer === player1) ? player1Elem : player2Elem;
-                    bumpedElem.style.transform = 'scale(1.2)';
-                    setTimeout(() => {
-                        bumpedElem.style.transform = 'scale(1)';
-                    }, 100);
-                }
-                 // Prevent players from getting stuck inside each other by pushing them apart slightly
-                const overlapX = (PLAYER_SIZE) - Math.abs(player1.x - player2.x);
-                const overlapY = (PLAYER_SIZE) - Math.abs(player1.y - player2.y);
-
-                if (overlapX > 0 && overlapY > 0) {
-                    const push = 2; // How much to push them apart
-                    if (player1.x < player2.x) {
-                        player1.x -= Math.min(push, overlapX / 2);
-                        player2.x += Math.min(push, overlapX / 2);
-                    } else {
-                        player1.x += Math.min(push, overlapX / 2);
-                        player2.x -= Math.min(push, overlapX / 2);
-                    }
-                    if (player1.y < player2.y) {
-                        player1.y -= Math.min(push, overlapY / 2);
-                        player2.y += Math.min(push, overlapY / 2);
-                    } else {
-                        player1.y += Math.min(push, overlapY / 2);
-                        player2.y -= Math.min(push, overlapY / 2);
-                    }
-                    // Ensure they don't go out of bounds after pushing
-                    player1.x = Math.max(0, Math.min(player1.x, GAME_WIDTH - PLAYER_SIZE));
-                    player1.y = Math.max(0, Math.min(player1.y, GAME_HEIGHT - PLAYER_SIZE));
-                    player2.x = Math.max(0, Math.min(player2.x, GAME_WIDTH - PLAYER_SIZE));
-                    player2.y = Math.max(0, Math.min(player2.y, GAME_HEIGHT - PLAYER_SIZE));
-
-                    updatePlayerPosition(player1, player1Elem);
-                    updatePlayerPosition(player2, player2Elem);
-                }
-            }
-        }
-
-
-        const keysPressed = {};
-        document.addEventListener('keydown', (e) => {
-            if (!gameRunning && (e.key === " " || e.key === "Enter")) {
-                 // Allow starting game with action keys if not running and start button visible
-                if (startButton.style.display !== 'none') {
-                    startGame();
-                } else if (resetButton.style.display !== 'none') {
-                    resetGame();
-                }
+        function countdownTimer() {
+            if (timeLeft <= 0) {
+                endGame("Time's up!");
                 return;
             }
-            if (!gameRunning) return;
-            keysPressed[e.key.toLowerCase()] = true;
-
-            // Player 1 Action
-            if (e.key === ' ') { // Spacebar
-                e.preventDefault();
-                handlePlayerAction(player1, player1Elem, hoard1Elem);
-            }
-            // Player 2 Action
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                handlePlayerAction(player2, player2Elem, hoard2Elem);
-            }
-        });
-
-        document.addEventListener('keyup', (e) => {
-            keysPressed[e.key.toLowerCase()] = false;
-        });
-
-        function movePlayers() {
-            if (!gameRunning) return;
-
-            // Player 1 (WASD)
-            if (keysPressed['w']) player1.y -= PLAYER_SPEED;
-            if (keysPressed['s']) player1.y += PLAYER_SPEED;
-            if (keysPressed['a']) player1.x -= PLAYER_SPEED;
-            if (keysPressed['d']) player1.x += PLAYER_SPEED;
-
-            // Player 2 (Arrow Keys)
-            if (keysPressed['arrowup']) player2.y -= PLAYER_SPEED;
-            if (keysPressed['arrowdown']) player2.y += PLAYER_SPEED;
-            if (keysPressed['arrowleft']) player2.x -= PLAYER_SPEED;
-            if (keysPressed['arrowright']) player2.x += PLAYER_SPEED;
-
-            // Boundary checks
-            player1.x = Math.max(0, Math.min(player1.x, GAME_WIDTH - PLAYER_SIZE));
-            player1.y = Math.max(0, Math.min(player1.y, GAME_HEIGHT - PLAYER_SIZE));
-            player2.x = Math.max(0, Math.min(player2.x, GAME_WIDTH - PLAYER_SIZE));
-            player2.y = Math.max(0, Math.min(player2.y, GAME_HEIGHT - PLAYER_SIZE));
-            
-            player1.lastMoveTime = Date.now(); // For bump logic
-            player2.lastMoveTime = Date.now();
-
-
-            updatePlayerPosition(player1, player1Elem);
-            updatePlayerPosition(player2, player2Elem);
-            
-            handlePlayerCollision(); // Check for collisions after movement
+            timeLeft--;
+            updateUI();
         }
 
+        function checkGameOver() {
+            if (!gameRunning || gameOver) return;
+
+            const p1Alive = !player1.isDestroyed;
+            const p2Alive = !player2.isDestroyed;
+
+            if (!p1Alive && !p2Alive) {
+                endGame("Both ships destroyed!");
+            } else if (!p1Alive) {
+                endGame("Player 2 (Red) Wins! Player 1 destroyed.");
+            } else if (!p2Alive) {
+                endGame("Player 1 (Blue) Wins! Player 2 destroyed.");
+            }
+        }
+        
+        function endGame(messageBase) {
+            gameRunning = false;
+            gameOver = true;
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+
+            let winnerMessage = messageBase;
+            if (timeLeft <=0) { // If game ended by timer, compare scores
+                 if (player1.score > player2.score) {
+                    winnerMessage += " Player 1 (Blue) wins with more salvage!";
+                } else if (player2.score > player1.score) {
+                    winnerMessage += " Player 2 (Red) wins with more salvage!";
+                } else {
+                    winnerMessage += " It's a tie on salvage!";
+                }
+            }
+           
+            setTimeout(() => { // Delay alert to let final screen draw
+                alert(`${winnerMessage}\nScores:\nP1 (Blue): ${player1.score}\nP2 (Red): ${player2.score}`);
+                RESET_BUTTON.style.display = 'inline-block';
+                START_BUTTON.style.display = 'none';
+            }, 100);
+        }
 
         function gameLoop() {
             if (!gameRunning) return;
 
-            movePlayers();
+            // Clear canvas
+            ctx.fillStyle = "#000020";
+            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+            // Update and draw game objects
+            player1.update();
+            player2.update();
             
-            if (Math.random() < 0.05) { // Chance to spawn treasure
-                spawnTreasure();
+            asteroids.forEach(asteroid => asteroid.update());
+            salvages.forEach(salvage => salvage.updatePosition()); // Salvage is static but uses screenwrap
+
+            player1.draw();
+            player2.draw();
+            asteroids.forEach(asteroid => asteroid.draw());
+            salvages.forEach(salvage => salvage.draw());
+
+            // Spawn new objects
+            if (Math.random() < 0.025 && asteroids.length < ASTEROID_NUM_MAX) spawnAsteroid(); // Chance to spawn
+            if (Math.random() < 0.03 && salvages.length < SALVAGE_NUM_MAX) spawnSalvage();
+
+            checkCollisions();
+            updateUI(); // Update score and health immediately after collisions
+
+            if (!gameOver) {
+                requestAnimationFrame(gameLoop);
             }
-
-            requestAnimationFrame(gameLoop);
         }
 
-        function countdown() {
-            if (timeLeft <= 0) {
-                clearInterval(gameInterval);
-                gameRunning = false;
-                timerElem.textContent = "Time's Up!";
-                let winnerMessage = "It's a tie!";
-                if (player1.score > player2.score) {
-                    winnerMessage = "Player 1 (Green) Wins!";
-                } else if (player2.score > player1.score) {
-                    winnerMessage = "Player 2 (Gold) Wins!";
-                }
-                alert(winnerMessage + `\nP1: ${player1.score} - P2: ${player2.score}`);
-                resetButton.style.display = 'inline-block';
-                startButton.style.display = 'none';
-                return;
-            }
-            timeLeft--;
-            timerElem.textContent = `Time Left: ${timeLeft}s`;
-        }
-
-        function clearTreasures() {
-            treasures.forEach(t => {
-                if (t.element && t.element.parentNode) {
-                    gameContainer.removeChild(t.element);
-                }
-            });
-            treasures = [];
-        }
-
-        function resetGame() {
-            clearInterval(gameInterval);
+        function setupNewGame() {
+            initPlayers();
+            asteroids = [];
+            salvages = [];
+            keysPressed = {};
+            timeLeft = GAME_DURATION_SECONDS;
             gameRunning = false;
+            gameOver = false;
+
+            for (let i = 0; i < ASTEROID_NUM_INITIAL; i++) {
+                spawnAsteroid();
+            }
+            for (let i = 0; i < 3; i++) { // Some initial salvage
+                spawnSalvage();
+            }
             
-            player1 = { x: 50, y: GAME_HEIGHT / 2 - PLAYER_SIZE / 2, score: 0, inventory: [] };
-            player2 = { x: GAME_WIDTH - 50 - PLAYER_SIZE, y: GAME_HEIGHT / 2 - PLAYER_SIZE / 2, score: 0, inventory: [] };
+            updateUI(); // Set initial UI state
+            TIMER_DISPLAY.textContent = `Time: ${timeLeft}`;
             
-            clearTreasures();
-            
-            updatePlayerPosition(player1, player1Elem);
-            updatePlayerPosition(player2, player2Elem);
-            updateScores();
-            
-            timeLeft = GAME_DURATION;
-            timerElem.textContent = `Time Left: ${timeLeft}s`;
-            
-            resetButton.style.display = 'none';
-            startButton.style.display = 'inline-block';
+            // Clear canvas for pre-game state
+            ctx.fillStyle = "#000020";
+            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+            player1.draw(); // Draw initial positions
+            player2.draw();
+            asteroids.forEach(a => a.draw());
+            salvages.forEach(s => s.draw());
         }
 
         function startGame() {
             if (gameRunning) return;
-            resetGame(); // Ensure fresh start
+            setupNewGame(); // Reset everything
             gameRunning = true;
-            startButton.style.display = 'none';
-            resetButton.style.display = 'none';
+            gameOver = false;
+            START_BUTTON.style.display = 'none';
+            RESET_BUTTON.style.display = 'none';
 
-
-            for(let i=0; i<10; i++) spawnTreasure(); // Initial treasures
-
-            gameInterval = setInterval(countdown, 1000);
-            requestAnimationFrame(gameLoop); // Start the main game loop
+            timerInterval = setInterval(countdownTimer, 1000);
+            requestAnimationFrame(gameLoop);
         }
 
-        startButton.addEventListener('click', startGame);
-        resetButton.addEventListener('click', resetGame);
+        // Event Listeners
+        window.addEventListener('keydown', (e) => {
+            keysPressed[e.key.toLowerCase()] = true;
+            // Player 1 Special
+            if (e.key === ' ' && gameRunning && !player1.isDestroyed) {
+                e.preventDefault();
+                player1.activateShield();
+            }
+            // Player 2 Special
+            if (e.key.toLowerCase() === 'enter' && gameRunning && !player2.isDestroyed) {
+                e.preventDefault();
+                player2.activateShield();
+            }
+        });
 
-        // Initial setup
-        updatePlayerPosition(player1, player1Elem);
-        updatePlayerPosition(player2, player2Elem);
-        updateScores();
-         timerElem.textContent = `Time Left: ${GAME_DURATION}s`;
+        window.addEventListener('keyup', (e) => {
+            keysPressed[e.key.toLowerCase()] = false;
+        });
+
+        START_BUTTON.addEventListener('click', startGame);
+        RESET_BUTTON.addEventListener('click', startGame); // Reset button also starts a new game
+
+        // Initial call to set up the screen before game starts
+        setupNewGame();
+
     </script>
 </body>
 </html>
